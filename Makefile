@@ -12,27 +12,27 @@ blocking:
 		-o bin/blocking_knn $(CFLAGS) -lm -fopenmp -D BLOCKING_COMMUNICATIONS
 
 run:
-	./bin/non_blocking_knn dataset/mnist_train.karas \
+	mpirun -np $(p) ./bin/non_blocking_knn dataset/mnist_train.karas \
 			dataset/mnist_train_labels.karas 30
 
 runp:
-	./bin/non_blocking_knn dataset/mnist_train.karas \
+	mpirun -np $(p) ./bin/non_blocking_knn dataset/mnist_train.karas \
 			dataset/mnist_train_labels.karas $(k)
 
 runp_svd:
-	./bin/non_blocking_knn dataset/mnist_train_svd.karas \
+	mpirun -np $(p) ./bin/non_blocking_knn dataset/mnist_train_svd.karas \
 			dataset/mnist_train_labels_svd.karas $(k)
 
 run_b:
-	./bin/blocking_knn dataset/mnist_train.karas \
+	mpirun -np $(p) ./bin/blocking_knn dataset/mnist_train.karas \
 			dataset/mnist_train_labels.karas 30
 
 runp_b:
-	./bin/blocking_knn dataset/mnist_train.karas \
+	mpirun -np $(p) ./bin/blocking_knn dataset/mnist_train.karas \
 			dataset/mnist_train_labels.karas $(k)
 
 runp_svd_b:
-	./bin/blocking_knn dataset/mnist_train_svd.karas \
+	mpirun -np $(p) ./bin/blocking_knn dataset/mnist_train_svd.karas \
 			dataset/mnist_train_labels_svd.karas $(k)
 
 purge:
