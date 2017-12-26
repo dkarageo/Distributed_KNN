@@ -13,4 +13,4 @@ How to compile:
     make all
 
 How to run:
-    make runp k=#value_for_k_neighbors
+    make runp k=#number_of_neighbors
