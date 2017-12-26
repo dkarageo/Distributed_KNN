@@ -4,7 +4,12 @@
 #include <mpi.h>
 #include "knn.h"
 #include "matrix.h"
-#include "distributed_knn.h"
+
+#ifdef BLOCKING_COMMUNICATIONS
+    #include "distributed_knn_blocking.h"
+#else
+    #include "distributed_knn.h"
+#endif
 
 
 double get_elapsed_time(struct timeval start, struct timeval stop);
