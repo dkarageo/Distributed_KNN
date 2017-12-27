@@ -1,3 +1,12 @@
+/**
+ * testing.c
+ *
+ * Created by Dimitrios Karageorgiou,
+ *  for course "Parallel And Distributed Systems".
+ *  Electrical and Computers Engineering Department, AuTh, GR - 2017-2018
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>

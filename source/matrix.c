@@ -1,3 +1,13 @@
+/**
+ * matrix.c
+ *
+ * Created by Dimitrios Karageorgiou,
+ *  for course "Parallel And Distributed Systems".
+ *  Electrical and Computers Engineering Department, AuTh, GR - 2017-2018
+ *
+ * matrix.c provides an implementation for routines defined in matrix.h.
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

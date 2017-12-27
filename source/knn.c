@@ -1,3 +1,13 @@
+/**
+ * knn.c
+ *
+ * Created by Dimitrios Karageorgiou,
+ *  for course "Parallel And Distributed Systems".
+ *  Electrical and Computers Engineering Department, AuTh, GR - 2017-2018
+ *
+ * knn.c provides an implementation for routines defined in knn.c
+ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

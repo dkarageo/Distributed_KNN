@@ -1,3 +1,13 @@
+/**
+ * distributed_knn_blocking.c
+ *
+ * Created by Dimitrios Karageorgiou,
+ *  for course "Parallel And Distributed Systems".
+ *  Electrical and Computers Engineering Department, AuTh, GR - 2017-2018
+ *
+ * An implementation provided for routines defined in distributed_knn_blocking.h
+ */
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
