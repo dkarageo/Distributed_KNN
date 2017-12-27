@@ -14,6 +14,9 @@
 #include "knn.h"
 #include "matrix.h"
 
+// If BLOCKING_COMMUNICATIONS is defined, then use header with
+// blocking communications. Else use the one with async ones. Also, the
+// appropriate implementation file should be linked.
 #ifdef BLOCKING_COMMUNICATIONS
     #include "distributed_knn_blocking.h"
 #else
@@ -74,39 +77,6 @@ int main(int argc, char *argv[])
         printf("knn search using %d processes took: %.2f secs.\n",
                tasks_num, get_elapsed_time(start, stop));
     }
-
-//----DEBUG----
-    // // Test for even numbered nodes, that distributed knn_search returns
-    // // the same values as local knn_search.
-    // matrix_t *all_data = matrix_load_in_chunks(data_fn, 1, 0);  // All data.
-    // struct KNN_Pair **results_more = knn_search(all_data, initial_data, k+1, 0);
-    // struct KNN_Pair **results_all = KNN_Pair_create_subtable_ref(
-    //         results_more, matrix_get_rows(initial_data), 1);
-    // int invalid = 0;
-    // for (int i = 0; i < matrix_get_rows(initial_data); i++) {
-    //     for (int j = 0; j < k; j++) {
-    //         if (results_all[i][j].index != results[i][j].index) {
-    //             printf("Rank %d: Index found: %d - Actual: %d - Difference: %d\n",
-    //                    rank, results[i][j].index, results_all[i][j].index,
-    //                    results[i][j].index - results_all[i][j].index);
-    //             invalid++;
-    //         }
-    //     }
-    // }
-    // if (invalid > 0) printf("Rank %d: %d invalid neighbors\n", rank, invalid);
-//----END DEBUG----
-
-//----DEBUG----
-    // if (rank == 1) {
-    //     for (int i = 0; i < matrix_get_rows(initial_data); i++) {
-    //         for (int j = 0; j < k; j++) {
-    //             //if (results[i][j].index == 9999 || results[i][j].index == 5000)
-    //             printf("%f - %d ||", results[i][j].distance, results[i][j].index);
-    //         };
-    //         printf("\n\n\n");
-    //     }
-    // }
-//----END DEBUG----
 
     // Load the whole labels data. Classification won't be distributed.
     matrix_t *labels = matrix_load_in_chunks(labels_fn, tasks_num, rank);
