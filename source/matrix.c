@@ -49,18 +49,6 @@ void matrix_destroy(matrix_t *matrix)
 }
 
 
-int32_t matrix_get_rows(matrix_t *matrix)
-{
-    return matrix->rows;
-}
-
-
-int32_t matrix_get_cols(matrix_t *matrix)
-{
-    return matrix->cols;
-}
-
-
 matrix_t *matrix_load_in_chunks(const char *filename,
 								int32_t chunks_num,
 								int32_t req_chunk)
@@ -123,21 +111,6 @@ matrix_t *matrix_load_in_chunks(const char *filename,
 	return matrix;
 }
 
-int32_t matrix_get_chunk_offset(matrix_t *matrix)
-{
-    return matrix->chunk_offset;
-}
-
-double matrix_get_cell(matrix_t *matrix, int32_t row, int32_t col)
-{
-	return matrix->data[row][col];
-}
-
-
-void matrix_set_cell(matrix_t *matrix, int32_t row, int32_t col, double value)
-{
-    matrix->data[row][col] = value;
-}
 
 char *matrix_serialize(matrix_t *matrix, size_t *bytec)
 {

@@ -11,14 +11,16 @@
  * Types defined in knn.h:
  *  -matrix_t (opaque)
  *
+ * Macros defined in knn.h:
+ *	-matrix_get_cols(matrix)
+ *	-matrix_get_rows(matrix)
+ *	-matrix_get_cell(matrix, row, col)
+ *	-matrix_get_chunk_offset(matrix)
+ *	-matrix_set_cell(matrix, row, col, value)
+ *
  * Functions defined in knn.h:
  *	-matrix_t *matrix_create(int32_t rows, int32_t cols)
  *	-void matrix_destroy(matrix_t *matrix)
- *	-int32_t matrix_get_cols(matrix_t *matrix)
- *	-int32_t matrix_get_rows(matrix_t *matrix)
- *	-double matrix_get_cell(matrix_t *matrix, int32_t row, int32_t col)
- *	-int32_t matrix_get_chunk_offset(matrix_t *matrix)
- *	-void matrix_set_cell(matrix_t *matrix, int32_t row, int32_t col, double value)
  *	-matrix_t *matrix_load_in_chunks(const char *filename,
  *	   								 int32_t chunks_num,
  * 									 int32_t req_chunk)
@@ -42,6 +44,32 @@ typedef struct {
 
 
 /**
+ * Returns number of columns of the given matrix.
+ */
+#define matrix_get_cols(matrix) matrix->cols
+
+/**
+ * Returns number of rows of the given matrix.
+ */
+#define matrix_get_rows(matrix) matrix->rows
+
+/**
+ * Returns the value of matrix cell.
+ */
+#define matrix_get_cell(matrix, row, col) matrix->data[row][col]
+
+/**
+ * Returns the offset of the first row of current matrix chunk
+ * from the beggining of the complete matrix.
+ */
+#define matrix_get_chunk_offset(matrix) matrix->chunk_offset
+
+/**
+ * Sets the value of a matrix cell to the given one.
+ */
+#define matrix_set_cell(matrix, row, col, value) matrix->data[row][col] = value
+
+/**
  * Creates a new empty matrix object.
  *
  * Elements are not initialized, and their initial value is undefined.
@@ -62,16 +90,6 @@ matrix_t *matrix_create(int32_t rows, int32_t cols);
  *	-matrix: The matrix to destroy.
  */
 void matrix_destroy(matrix_t *matrix);
-
-/**
- * Returns number of columns of the given matrix.
- */
-int32_t matrix_get_cols(matrix_t *matrix);
-
-/**
- * Returns number of rows of the given matrix.
- */
-int32_t matrix_get_rows(matrix_t *matrix);
 
 /**
  * Loads a chunk of a matrix object stored to filesystem.
@@ -100,22 +118,6 @@ int32_t matrix_get_rows(matrix_t *matrix);
 matrix_t *matrix_load_in_chunks(const char *filename,
 								int32_t chunks_num,
 								int32_t req_chunk);
-
-/**
- * Returns the offset of the first row of current matrix chunk
- * from the beggining of the complete matrix.
- */
-int32_t matrix_get_chunk_offset(matrix_t *matrix);
-
-/**
- * Returns the value of matrix cell.
- */
-double matrix_get_cell(matrix_t *matrix, int32_t row, int32_t col);
-
-/**
- * Sets the value of a matrix cell to the given one.
- */
-void matrix_set_cell(matrix_t *matrix, int32_t row, int32_t col, double value);
 
 /**
  * Serializes the given matrix object.

@@ -23,7 +23,7 @@ run_blocking:
 			dataset/mnist_train_labels.karas 30
 
 runp_blocking:
-	mpirun -np $(p) $(data) $(labels) $(k)
+	mpirun -np $(p) ./bin/blocking_knn $(data) $(labels) $(k)
 
 purge:
 	-rm bin/*
