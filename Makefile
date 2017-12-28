@@ -1,5 +1,5 @@
 CC=mpicc
-CFLAGS=-O3 -Wall -Wextra -lm -fopenmp -std=c99
+CFLAGS=-O3 -Wall -Wextra -lm -fopenmp -std=c99 -g
 
 all: non_blocking blocking
 
