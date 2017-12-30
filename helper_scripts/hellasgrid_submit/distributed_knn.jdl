@@ -1,0 +1,14 @@
+JobType = "Normal";
+Executable = "mpi-start-wrapper.sh";
+Arguments = "";
+CpuNumber = 32;
+SmpGranularity = 8;
+StdOutput = "std.out";
+StdError = "std.err";
+InputSandbox = {"distributed_knn.tar.gz", "mpi-start-wrapper.sh", "mpi-hooks.sh"};
+OutputSandbox = {"std.err","std.out"};
+Requirements =
+   Member("MPI-START", other.GlueHostApplicationSoftwareRunTimeEnvironment)
+   && Member("OPENMPI", other.GlueHostApplicationSoftwareRunTimeEnvironment)
+   && other.GlueCEInfoHostName == "cream01.grid.auth.gr";
+Environment = {"OPENMP=true"};
