@@ -97,7 +97,6 @@ struct KNN_Pair **knn_search_distributed(matrix_t *local_data, int k,
     matrix_t *cur_data_block = NULL;   // Current block of data to be used for knn search.
     matrix_t *next_data_block = NULL;  // Next block of data for knn search.
     struct KNN_Pair **knns = NULL; // K Nearest Neighbors for current query chunk.
-    struct KNN_Pair **knn_helper = NULL;  // MEMORY LEAK CURRENTLY -- FIX IT LATER!!!
 
     cur_data_block = local_data;  // Start knn search using local data.
 
@@ -134,10 +133,12 @@ struct KNN_Pair **knn_search_distributed(matrix_t *local_data, int k,
         // On first iteration, search is done using the local data chunk.
         if (i == 0) {
             // First nearest neighbor will be the point itself, so remove it.
-            knn_helper = knn_search(cur_data_block, local_data, k+1,
+            struct KNN_Pair **knn_helper = knn_search(
+                    cur_data_block, local_data, k+1,
                     matrix_get_chunk_offset(cur_data_block));
-            knns = KNN_Pair_create_subtable_ref(
-                    knn_helper, matrix_get_rows(local_data), 1);
+            knns = KNN_Pair_create_subtable(
+                    knn_helper, 0, matrix_get_rows(local_data)-1, 1, k);
+            KNN_Pair_destroy_table(knn_helper, matrix_get_rows(local_data));
         }
         // On all remaining iterations, search is done using data chunks
         // received from other tasks.

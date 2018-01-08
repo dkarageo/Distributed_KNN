@@ -127,6 +127,8 @@ int main(int argc, char *argv[])
             results, matrix_get_rows(initial_data), k,
             labels, prev_task, next_task, tasks_num
     );
+    // Results of knn_search are no more needed.
+    KNN_Pair_destroy_table(results, matrix_get_rows(initial_data));
 
     // Finally, use the labels of nearest neighbors, to classify each point
     // in initial data.
@@ -141,11 +143,10 @@ int main(int argc, char *argv[])
     }
 
     // Verify the local classification results.
-    matrix_t *local_labels = matrix_load_in_chunks(labels_fn, tasks_num, rank);
     int valid = 0;
     for (int i = 0; i < matrix_get_rows(classified); i++) {
         if (matrix_get_cell(classified, i, 0) ==
-            matrix_get_cell(local_labels, i, 0))
+            matrix_get_cell(labels, i, 0))
         {
             valid++;
         }
@@ -183,7 +184,6 @@ int main(int argc, char *argv[])
 
 	matrix_destroy(initial_data);
     matrix_destroy(labels);
-    matrix_destroy(local_labels);
     matrix_destroy(classified);
 
     MPI_Finalize();
