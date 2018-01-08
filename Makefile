@@ -3,13 +3,16 @@ CFLAGS=-O3 -Wall -Wextra -lm -fopenmp -std=c99
 
 all: non_blocking blocking
 
-non_blocking:
+non_blocking: bin_dir
 	$(CC) source/testing.c source/distributed_knn.c source/knn.c source/matrix.c \
 		-o bin/non_blocking_knn $(CFLAGS)
 
-blocking:
+blocking: bin_dir
 	$(CC) source/testing.c source/distributed_knn_blocking.c source/knn.c source/matrix.c \
 		-o bin/blocking_knn $(CFLAGS) -D BLOCKING_COMMUNICATIONS
+
+bin_dir:
+	mkdir -p bin
 
 run:
 	mpirun -np $(p) ./bin/non_blocking_knn dataset/mnist_train.karas \
