@@ -20,12 +20,12 @@ pre_run_hook () {
 
     # Copy executables and data to initial dir.
     #echo "Copying resources to root: " $(pwd)
-    cp Distributed_Knn/bin/non_blocking_knn .
-    cp Distributed_Knn/bin/blocking_knn .
-    cp Distributed_Knn/dataset/mnist_train.karas .
-    cp Distributed_Knn/dataset/mnist_train_labels.karas .
-    cp Distributed_Knn/dataset/mnist_train_svd.karas .
-    cp Distributed_Knn/dataset/mnist_train_labels_svd.karas .
+    cp Distributed_KNN/bin/non_blocking_knn .
+    cp Distributed_KNN/bin/blocking_knn .
+    cp Distributed_KNN/dataset/mnist_train.karas .
+    cp Distributed_KNN/dataset/mnist_train_labels.karas .
+    cp Distributed_KNN/dataset/mnist_train_svd.karas .
+    cp Distributed_KNN/dataset/mnist_train_labels_svd.karas .
     #ls -la
 
     # Everything's OK.
