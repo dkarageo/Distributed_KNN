@@ -14,10 +14,12 @@
  *  -struct KNN_Pair **knn_search(matrix_t *, matrix_t *, int, int)
  *  -matrix_t *knn_classify(matrix_t *labeled_knns)
  *  -matrix_t *knn_labeling(struct KNN_Pair **, int, int, matrix_t *, int *,
-                        matrix_t *, int)
+ *                          matrix_t *, int)
  *  -struct KNN_Pair **KNN_Pair_create_empty_table(int, int)
- *  -struct KNN_Pair **KNN_Pair_create_subtable_ref(struct KNN_Pair **, int, int)
- *  -void KNN_Pair_destroy_subtable_ref(struct KNN_Pair **)
+ *  -void KNN_Pair_destroy_table(struct KNN_Pair **table, int rows)
+ *  -struct KNN_Pair **KNN_Pair_create_subtable(struct KNN_Pair **knns,
+ *                                              int row_start, int row_end,
+ *                                              int col_start, int col_end)
  *  -int KNN_Pair_asc_comp(const void *, const void *)
  */
 
@@ -160,36 +162,35 @@ matrix_t *knn_labeling(struct KNN_Pair **knns, int points, int k,
 struct KNN_Pair **KNN_Pair_create_empty_table(int points, int k);
 
 /**
- * ----BY ITS NATURE THIS ROUTINE WILL PROBABLY LEAD TO MEMORY LEAKS----
- * ----SHOULD BE REPLACED IN FUTURE----
- *
- * Returns a reference to the subtable of given knns 2D array, that has
- * col_reduce columns removed from its beggining.
- *
- * No new object is allocated. The reference is valid as long as the original
- * object is valid. Though, it should be destroyed seperately.
+ * Destroy the given table of struct KNN_Pair objects.
  *
  * Parameters:
- *  -knns: A reference to a 2D struct KNN_Pair array.
- *  -points: The number of points contained in knns.
- *  -col_reduce: The number of columns to cut from the beggining.
- *
- * Returns:
- *  A reference to a 2D KNN_Pair array, with col_reduce less columns.
+ *  -table: A reference to the table to destroy.
+ *  -rows: Number of rows that table has.
  */
-struct KNN_Pair **KNN_Pair_create_subtable_ref(struct KNN_Pair **knns,
-                                               int points, int col_reduce);
+void KNN_Pair_destroy_table(struct KNN_Pair **table, int rows);
 
 /**
- * ----DANGEROUS, DANGEROUS, DANGEROUS!!!----
- * ----SHOULD BE REPLACED IN FUTURE----
+ * Creates a new table, with the content of a subtable of the given table.
  *
- * Destroys a given reference inside a struct KNN_Pair 2D array.
+ * If row_start and col_start are set to 0 and row_end and col_end are set
+ * to the number of rows given table has minus 1 (since it is 0-indexed and
+ * ending values are inclusive), the new table is simply a copy of the given
+ * one.
  *
- * knns_ref: A reference inside a real struct KNN_Pair 2D array. In any case
- *          it should not be the real table.
+ * Parameters:
+ *  -knns: The table from which content will be copied to the new one.
+ *  -row_start: The index of row to start copying from (inclusive).
+ *  -row_end: The index of row to stop copying at (inclusive).
+ *  -col_start: The index of column to start copying from (inclusive).
+ *  -col_end: The index of column to stop copying at (inclusive).
+ *
+ * Returns:
+ *  A reference to the newly created table.
  */
-void KNN_Pair_destroy_subtable_ref(struct KNN_Pair **knns_ref);
+struct KNN_Pair **KNN_Pair_create_subtable(struct KNN_Pair **knns,
+                                           int row_start, int row_end,
+                                           int col_start, int col_end);
 
 /**
  * An ascending comparator for struct KNN_Pair object, based on distance
@@ -206,5 +207,40 @@ int KNN_Pair_asc_comp(const void * a, const void *b);
  * It is intended for usage in functions like qsort().
  */
 int KNN_Pair_asc_comp_by_index(const void * a, const void *b);
+
+
+// ================ Legacy Code =================
+
+// /**
+//  * ----BY ITS NATURE THIS ROUTINE WILL PROBABLY LEAD TO MEMORY LEAKS----
+//  * ----SHOULD BE REPLACED IN FUTURE----
+//  *
+//  * Returns a reference to the subtable of given knns 2D array, that has
+//  * col_reduce columns removed from its beggining.
+//  *
+//  * No new object is allocated. The reference is valid as long as the original
+//  * object is valid. Though, it should be destroyed seperately.
+//  *
+//  * Parameters:
+//  *  -knns: A reference to a 2D struct KNN_Pair array.
+//  *  -points: The number of points contained in knns.
+//  *  -col_reduce: The number of columns to cut from the beggining.
+//  *
+//  * Returns:
+//  *  A reference to a 2D KNN_Pair array, with col_reduce less columns.
+//  */
+// struct KNN_Pair **KNN_Pair_create_subtable_ref(struct KNN_Pair **knns,
+//                                                int points, int col_reduce);
+//
+// /**
+//  * ----DANGEROUS, DANGEROUS, DANGEROUS!!!----
+//  * ----SHOULD BE REPLACED IN FUTURE----
+//  *
+//  * Destroys a given reference inside a struct KNN_Pair 2D array.
+//  *
+//  * knns_ref: A reference inside a real struct KNN_Pair 2D array. In any case
+//  *          it should not be the real table.
+//  */
+// void KNN_Pair_destroy_subtable_ref(struct KNN_Pair **knns_ref);
 
 #endif

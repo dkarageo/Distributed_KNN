@@ -63,7 +63,7 @@ echo "Current cluster: " $(hostname)
 echo "Working dir: " $(pwd)
 
 # Go into actual project directory. Here actual script starts from.
-cd distributed_knn
+cd Distributed_KNN
 
 make all
 

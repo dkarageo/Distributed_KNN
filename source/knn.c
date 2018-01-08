@@ -209,22 +209,27 @@ struct KNN_Pair **KNN_Pair_create_empty_table(int points, int k)
     return obj;
 }
 
-struct KNN_Pair **KNN_Pair_create_subtable_ref(struct KNN_Pair **knns,
-                                               int points, int col_reduce)
+void KNN_Pair_destroy_table(struct KNN_Pair **table, int rows)
 {
-    struct KNN_Pair **subtable = (struct KNN_Pair **) malloc(
-                sizeof(struct KNN_Pair *) * points);
+    for (int i = 0; i < rows; i++) free(table[i]);
+    free(table);
+}
 
-    for (int i = 0; i < points; i++) {
-        subtable[i] = knns[i] + col_reduce;
+struct KNN_Pair **KNN_Pair_create_subtable(struct KNN_Pair **knns,
+                                           int row_start, int row_end,
+                                           int col_start, int col_end)
+{
+    int new_rows = row_end - row_start + 1;
+    int new_cols = col_end - col_start + 1;
+
+    struct KNN_Pair **subtable = KNN_Pair_create_empty_table(new_rows, new_cols);
+
+    for (int i = 0; i < new_rows; i++) {
+        memcpy(subtable[i], knns[row_start+i]+col_start,
+               sizeof(struct KNN_Pair) * new_cols);
     }
 
     return subtable;
-}
-
-void KNN_Pair_destroy_subtable_ref(struct KNN_Pair **knns_ref)
-{
-    free(knns_ref);
 }
 
 int KNN_Pair_asc_comp(const void * a, const void *b)
@@ -240,3 +245,24 @@ int KNN_Pair_asc_comp_by_index(const void * a, const void *b)
 {
     return ((struct KNN_Pair *) a)->index - ((struct KNN_Pair *) b)->index;
 }
+
+
+// ================== Legacy Code =================
+
+// struct KNN_Pair **KNN_Pair_create_subtable_ref(struct KNN_Pair **knns,
+//                                                int points, int col_reduce)
+// {
+//     struct KNN_Pair **subtable = (struct KNN_Pair **) malloc(
+//                 sizeof(struct KNN_Pair *) * points);
+//
+//     for (int i = 0; i < points; i++) {
+//         subtable[i] = knns[i] + col_reduce;
+//     }
+//
+//     return subtable;
+// }
+//
+// void KNN_Pair_destroy_subtable_ref(struct KNN_Pair **knns_ref)
+// {
+//     free(knns_ref);
+// }

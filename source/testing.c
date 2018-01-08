@@ -10,7 +10,7 @@
  *
  * It allows for self-classificiation of a provided dataset.
  *
- * In order to do a successfull testing, two files required. One with the cords
+ * In order to do a successful testing, two files required. One with the cords
  * of the points to be classified and the other with the labels of these points
  * that has been previously calculated. In this way, every single provided point
  * is classified by using all the other points. Finally, a result in percentage
@@ -19,6 +19,9 @@
  *
  * It utilizes MPI routines, and in order to successfully compile and run,
  * at least an MPI 1.0 implementation should exist.
+ *
+ * Also OpenMP is utilized if it gets compiled with -fopenmp flag, for Parallel
+ * in-node processing.
  *
  * Common usage for testing on shared memory systems:
  *  mpirun -np <procs_num> ./<binary_name> <path_to_data_file> \
@@ -48,8 +51,8 @@
 // blocking communications. Else use the one with async ones. Also, the
 // appropriate implementation file should be linked.
 // ====Since there is no explicit shared interface between these two headers,
-// compatibility between those two is provided for now as a convenience.
-// May implement it different later.====
+// compatibility between them is provided for now as a convenience.
+// May implement it different later, without needed for now.====
 #ifdef BLOCKING_COMMUNICATIONS
     #include "distributed_knn_blocking.h"
 #else
@@ -127,6 +130,8 @@ int main(int argc, char *argv[])
             results, matrix_get_rows(initial_data), k,
             labels, prev_task, next_task, tasks_num
     );
+    // Results of knn_search are no more needed.
+    KNN_Pair_destroy_table(results, matrix_get_rows(initial_data));
 
     // Finally, use the labels of nearest neighbors, to classify each point
     // in initial data.
@@ -141,11 +146,10 @@ int main(int argc, char *argv[])
     }
 
     // Verify the local classification results.
-    matrix_t *local_labels = matrix_load_in_chunks(labels_fn, tasks_num, rank);
     int valid = 0;
     for (int i = 0; i < matrix_get_rows(classified); i++) {
         if (matrix_get_cell(classified, i, 0) ==
-            matrix_get_cell(local_labels, i, 0))
+            matrix_get_cell(labels, i, 0))
         {
             valid++;
         }
@@ -183,7 +187,6 @@ int main(int argc, char *argv[])
 
 	matrix_destroy(initial_data);
     matrix_destroy(labels);
-    matrix_destroy(local_labels);
     matrix_destroy(classified);
 
     MPI_Finalize();
