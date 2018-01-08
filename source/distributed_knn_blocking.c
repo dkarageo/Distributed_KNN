@@ -114,6 +114,11 @@ struct KNN_Pair **knn_search_distributed(matrix_t *local_data, int k,
 
             out_object = matrix_serialize(cur_data_block, &out_size);
 
+            // Resolve the deadlocks in ring topology using blocking routines,
+            // by first receiving data on even nodes and first sending data on
+            // odd nodes. That approach works for both even and odd total number
+            // of nodes, since operations are two (send and receive). Thus,
+            // total number of performed operations is always even.
             switch(next_task % 2) {
             case 0:
                 // Receive next data from previous process.
