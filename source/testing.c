@@ -25,7 +25,7 @@
  *
  * Common usage for testing on shared memory systems:
  *  mpirun -np <procs_num> ./<binary_name> <path_to_data_file> \
- *          <path_to_labels_file> <k>
+ *          <path_to_labels_file> <k> [<path_to_results_file>]
  *      where:
  *          -procs_num : Number of processes to be spawned.
  *          -binary_name : The name of the compiled binary.
@@ -34,6 +34,9 @@
  *          -path_to_labels_file : Path to a .karas file containing the actual
  *              labels of the points contained in data file.
  *          -k : The number of k-nearest-neighbors to be used for classification.
+ *          -[optional] path_to_results_file: Path to a .karas file containing
+ *               precalculated results of classification percentages for at least
+ *               all k values up to requested k.
  * path_to_data_file, path_to_labels_file and k arguments should be provided in
  * every setup the executable will run upon. Though, in a cluster setup compile
  * the executable and follow cluster's guide to properly submit it.
@@ -42,7 +45,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
+#include <math.h>
 #include <mpi.h>
 #include "knn.h"
 #include "matrix.h"
@@ -60,6 +65,7 @@
 #endif
 
 
+int verify(char *results_fn, int k, double actual);
 double get_elapsed_time(struct timeval start, struct timeval stop);
 
 
@@ -73,6 +79,12 @@ int main(int argc, char *argv[])
     char *data_fn = argv[1];  // Filename of data matrix.
     char *labels_fn = argv[2];  // Filename of labels matrix.
     int k = atoi(argv[3]);  // Number of nearest neighbors to be used for search.
+
+    char *test_fn = NULL;  // Filename of the file with precalculated results
+                           // for testing.
+    // That file is not a prerequisite, so if not supplied it's just fine.
+    // Just won't compare final results, against precalculated ones.
+    if (argc >= 5) test_fn = argv[4];
 
     int tasks_num;  // Tasks in MPI_COMM_WORLD.
 	int rank;       // Task ID of current task, in MPI_COMM_WORLD.
@@ -181,8 +193,14 @@ int main(int argc, char *argv[])
             total_all += total[i];
         }
 
-        printf("k = %d - classification accuracy: %2.1f %%\n",
-               k, ((double) total_valid / (double) total_all) * 100.0);
+        free(success);
+        free(total);
+
+        double accuracy = ((double) total_valid / (double) total_all) * 100.0;
+
+        printf("k = %d - classification accuracy: %2.1f %%\n", k, accuracy);
+
+        if (test_fn && strcmp(test_fn, "")) verify(test_fn, k, accuracy);
     }
 
 	matrix_destroy(initial_data);
@@ -211,4 +229,38 @@ double get_elapsed_time(struct timeval start, struct timeval stop)
     double elapsed_time = (stop.tv_sec - start.tv_sec) * 1.0;
     elapsed_time += (stop.tv_usec - start.tv_usec) / 1000000.0;
     return elapsed_time;
+}
+
+/**
+ *
+ */
+int verify(char *results_fn, int k, double actual)
+{
+    matrix_t *results = matrix_load_in_chunks(results_fn, 1, 0);
+
+    if (!results) {
+        printf("ERROR: Failed to load precalculated results file.\n");
+        return -1;
+    }
+
+    if (matrix_get_rows(results) < k) {
+        // Each row is expected to hold the precalculated value for the
+        // equivalent k value, starting from k=1. So if number of rows < k,
+        // there is no possibility for a precalculated value to exist.
+        printf("\tNo precalculated result is contained in %s for k = %d.\n",
+               results_fn, k);
+        return -1;
+    }
+
+    int pass = 1;
+
+    if (abs(matrix_get_cell(results, k-1, 0) - actual) < 0.1) {
+        printf("Test: SUCCESS\n");
+    }
+    else {
+        printf("Test: FAIL\n");
+        pass = 0;
+    }
+
+    return pass;
 }
