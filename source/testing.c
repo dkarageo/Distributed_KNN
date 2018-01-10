@@ -232,7 +232,23 @@ double get_elapsed_time(struct timeval start, struct timeval stop)
 }
 
 /**
+ * Verifies results of classification, by comparing the accuracy percentage
+ * of classification that took place by current implementation, against the
+ * accuracy percentage of an external implementation.
  *
+ * Parameters:
+ *  -results_fn : Path to a .karas file containing a matrix of precalculated
+ *          accuracy percentages for all k values up to the k value provided
+ *          in k argument.
+ *  -k : The number of nearest neighbors used in classification that resulted
+ *          to the accuracy value provided in actual argument.
+ *  -actual : The accuracy percentage of the classification that took place
+ *          by current implementation.
+ *
+ * Returns:
+ *  1 if actual value, matched the one contained in given matrix, else returns 0.
+ *  Upon failing to load the matrix, or if matrix doesn't contain a
+ *  precalculated value for given k, it returns -1.    
  */
 int verify(char *results_fn, int k, double actual)
 {
