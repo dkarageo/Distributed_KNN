@@ -34,8 +34,9 @@ make run p=<num_of_processes>
 or    
 ```
 export OMP_NUM_THREADS=<threads_per_process>
-make runp p=<num_of_processes> data=<path_to_datafile> labels=<path_to_labelfile> k=<nearest_neighhbors_num>
+make runp p=<num_of_processes> data=<path_to_datafile> labels=<path_to_labelfile> k=<nearest_neighhbors_num> [results=<path_to_precalculated_results_file>]
 ```
+where arguments in `[]` are optional.
 
 #### Blocking communications:
 
@@ -46,8 +47,9 @@ make run_blocking p=<num_of_processes>
 or
 ```
 export OMP_NUM_THREADS=<threads_per_process>
-make runp_blocking p=<num_of_processes> data=<path_to_datafile> labels=<path_to_labelfile> k=<nearest_neighhbors_num>
+make runp_blocking p=<num_of_processes> data=<path_to_datafile> labels=<path_to_labelfile> k=<nearest_neighhbors_num> [results=<path_to_precalculated_results_file>]
 ```
+where arguments in `[]` are optional.
 
 ### **How to run on a cluster setup:**
 
