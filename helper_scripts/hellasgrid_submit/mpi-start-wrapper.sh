@@ -63,7 +63,7 @@ do
 
             # Setup for mpi-start.
             export I2G_MPI_APPLICATION=$my_executable
-            export I2G_MPI_APPLICATION_ARGS="$DATA_FILENAME$datamod$FILE_ENDING $DATA_FILENAME$LABELS_MODIFIER$datamod$FILE_ENDING $i"
+            export I2G_MPI_APPLICATION_ARGS="$DATA_FILENAME$datamod$FILE_ENDING $DATA_FILENAME$LABELS_MODIFIER$datamod$FILE_ENDING $i $DATA_FILENAME$TEST_MODIFIER$datamod$FILE_ENDING"
             export I2G_MPI_TYPE=$MPI_FLAVOR_LOWER
             export I2G_MPI_PRE_RUN_HOOK=mpi-hooks.sh
             #export I2G_MPI_POST_RUN_HOOK=mpi-hooks.sh
