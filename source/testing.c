@@ -25,7 +25,9 @@
  *
  * Common usage for testing on shared memory systems:
  *  mpirun -np <procs_num> ./<binary_name> <path_to_data_file> \
- *          <path_to_labels_file> <k> [<path_to_results_file>]
+ *          <path_to_labels_file> <k> [<path_to_results_file>
+ *          [<path_to_indexes_file>]]
+ *
  *      where:
  *          -procs_num : Number of processes to be spawned.
  *          -binary_name : The name of the compiled binary.
@@ -37,6 +39,11 @@
  *          -[optional] path_to_results_file: Path to a .karas file containing
  *               precalculated results of classification percentages for at least
  *               all k values up to requested k.
+ *          -[optional] path_to_indexes_file: Path to a .karas file containing
+ *               precalculated results of indexes of nearest neighbors, that are
+ *               expected to be returned by knn search. If this file contains
+ *               less nearest neighbors for each point than requested k, tests
+ *               that utilize this file are going to be ommited.
  * path_to_data_file, path_to_labels_file and k arguments should be provided in
  * every setup the executable will run upon. Though, in a cluster setup compile
  * the executable and follow cluster's guide to properly submit it.
@@ -65,7 +72,9 @@
 #endif
 
 
-int verify(char *results_fn, int k, double actual);
+int verify_classification(char *results_fn, int k, double actual);
+int verify_search(char *indexes_fn, int points, int k,
+                  struct KNN_Pair **actual, int processes, int rank);
 double get_elapsed_time(struct timeval start, struct timeval stop);
 
 
@@ -82,9 +91,16 @@ int main(int argc, char *argv[])
 
     char *test_fn = NULL;  // Filename of the file with precalculated results
                            // for testing.
+
     // That file is not a prerequisite, so if not supplied it's just fine.
     // Just won't compare final results, against precalculated ones.
     if (argc >= 5) test_fn = argv[4];
+
+    char *test_indexes_fn = NULL;  // Filename of the file with precalculated
+                                   // indexes of knn search used for testing.
+    // That file is not a prerequisite too, but it is expected to be provided
+    // only when the file for final accuracy testing has been provided.
+    if(argc >= 6) test_indexes_fn = argv[5];
 
     int tasks_num;  // Tasks in MPI_COMM_WORLD.
 	int rank;       // Task ID of current task, in MPI_COMM_WORLD.
@@ -112,6 +128,7 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
+    // Calculate the time of knn search.
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&start, NULL);
 
@@ -123,8 +140,25 @@ int main(int argc, char *argv[])
     gettimeofday(&stop, NULL);
 
     if (rank == MPI_MASTER) {
-        printf("knn search using %d processes took: %.2f secs.\n",
+        printf("Knn Search using %d processes took: %.2f secs.\n",
                tasks_num, get_elapsed_time(start, stop));
+    }
+
+    // If a validation file has been provided, check the validity of results of
+    // knn search.
+    if (test_indexes_fn && strcmp(test_indexes_fn, "")) {
+        int rc = verify_search(test_indexes_fn, matrix_get_rows(initial_data),
+                               k, results, tasks_num, rank);
+
+        // Use 3 * number_of_tasks as the signal to ignore this test.
+        if (rc < 0) rc = 3 * tasks_num;
+        int st;
+        MPI_Reduce(&rc, &st, 1, MPI_INT, MPI_SUM, MPI_MASTER, MPI_COMM_WORLD);
+
+        if (rank == MPI_MASTER) {
+            if (st == tasks_num) printf("Knn Search Test: SUCCESS\n");
+            else if (st < tasks_num) printf("Knn Search Test: FAIL\n");
+        }
     }
 
     // Load the labels chunk belonging to current process according to its rank.
@@ -133,6 +167,7 @@ int main(int argc, char *argv[])
         printf("ERROR: Failed to load labels matrix in task %d.\n", rank);
     }
 
+    // Calculate time of classification.
     MPI_Barrier(MPI_COMM_WORLD);
     gettimeofday(&start, NULL);
 
@@ -200,7 +235,8 @@ int main(int argc, char *argv[])
 
         printf("k = %d - classification accuracy: %2.1f %%\n", k, accuracy);
 
-        if (test_fn && strcmp(test_fn, "")) verify(test_fn, k, accuracy);
+        if (test_fn && strcmp(test_fn, ""))
+            verify_classification(test_fn, k, accuracy);
     }
 
 	matrix_destroy(initial_data);
@@ -248,9 +284,9 @@ double get_elapsed_time(struct timeval start, struct timeval stop)
  * Returns:
  *  1 if actual value, matched the one contained in given matrix, else returns 0.
  *  Upon failing to load the matrix, or if matrix doesn't contain a
- *  precalculated value for given k, it returns -1.    
+ *  precalculated value for given k, it returns -1.
  */
-int verify(char *results_fn, int k, double actual)
+int verify_classification(char *results_fn, int k, double actual)
 {
     matrix_t *results = matrix_load_in_chunks(results_fn, 1, 0);
 
@@ -271,11 +307,120 @@ int verify(char *results_fn, int k, double actual)
     int pass = 1;
 
     if (abs(matrix_get_cell(results, k-1, 0) - actual) < 0.1) {
-        printf("Test: SUCCESS\n");
+        printf("Classification Test: SUCCESS\n");
     }
     else {
-        printf("Test: FAIL\n");
+        printf("Classification Test: FAIL\n");
         pass = 0;
+    }
+
+    return pass;
+}
+
+/**
+ * Verifies the results of a knn search, by comparing over precalculated ones
+ * for the dataset upon which knn search took place.
+ *
+ * Parameters:
+ *  -indexes_fn : Path to a .karas file containing a matrix with precalculated
+ *          indexes of nearest neighbors for the query points the table
+ *          provided in actual argument corresponds to.
+ *  -points : Number of points (rows) contained in provided table to
+ *          actual argument.
+ *  -k : Number of nearest neighbors contained for each point in table provided
+ *          to actual argument.
+ *  -actual : The table containing the results of knn search to be verified.
+ *  -processes : Number of total processes used for distributed knn search.
+ *  -rank : Rank of current process in MPI_COMM_WORLD.
+ *
+ * Returns:
+ *  1 if actual values, match the ones contained in given matrix, else returns 0.
+ *  Upon failing to load the matrix, or if matrix doesn't contain a
+ *  precalculated value for the range of given k, it returns -1.
+ */
+int verify_search(char *indexes_fn, int points, int k,
+                  struct KNN_Pair **actual, int processes, int rank)
+{
+    matrix_t *indexes = matrix_load_in_chunks(indexes_fn, processes, rank);
+
+    if (!indexes) {
+        printf("ERROR: Failed to load precalculated indexes file.\n");
+        return -1;
+    }
+
+    if (matrix_get_rows(indexes) < points || matrix_get_cols(indexes) < k) {
+        printf("No precalculated indexes results contained in %s for k = %d",
+               indexes_fn, k);
+        return -1;
+    }
+
+    int pass = 1;
+
+    for (int i = 0; i < points; i++) {
+        for (int j = 0; j < k; j++) {
+            if (actual[i][j].index != ((int) matrix_get_cell(indexes, i, j))) {
+
+                // MATLAB horror story #567343...
+                // This actually applies to results calculated using MATLAB's
+                // knnsearch() function and also to every other knn indexes
+                // generator that doesn't specify the order of returned nearest
+                // neighbors in case their distances are exactly the same.
+                // MATLAB, doesn't specify anything about it. In practice,
+                // results of knnsearch() tests have been found by tests to be
+                // arbitrarily ordered for neighbors that have the same distance.
+                // So, if actual and expected indexes don't match, that doesn't
+                // always mean that knn search failed. A further search is
+                // required in order to be sure that nearest neighbors are
+                // just not sorted in another way.
+
+                int index = matrix_get_cell(indexes, i, j);
+                double dist = actual[i][j].distance;
+                int found = 0;
+
+                // Search for same distance neighbors backwards.
+                int new_j = j - 1;
+                while(!found && new_j > -1 && actual[i][new_j].distance == dist) {
+                    if (actual[i][new_j].index == index) found = 1;
+                    new_j--;
+                }
+
+                // Search for same distance neighbors forward.
+                new_j = j + 1;
+                while(!found && new_j < k && actual[i][new_j].distance == dist) {
+                    if (actual[i][new_j].index == index) found = 1;
+                    new_j++;
+                }
+
+                // A special case is when false ordered neighbors of same
+                // distance span the k boundary. In that case, test if the
+                // actual index is contained in next cells of the precalculated
+                // indices matrix.
+                if (new_j == k) {
+                    while(!found && new_j < matrix_get_cols(indexes)) {
+                        if (actual[i][j].index == matrix_get_cell(indexes, i, new_j)) {
+                            found = 1;
+                        }
+                        new_j++;
+                    }
+                }
+
+                // If that's the last point in provided precalculated indexes,
+                // just skip the error. If implementation is erroneous, it will
+                // get cached somewherhe else.
+                if (!found && j == (matrix_get_cols(indexes)-1)) found = 1;
+
+                // Another special case is unhandled, where provided precalculated
+                // indexes matrix is not big enough to contain the block of all
+                // neighbors with the same distance. If that's the case, go and
+                // find a proper testing dataset idiot...
+                if (!found) {
+                    pass = 0;
+                    break;
+                }
+                else pass = 1;
+            }
+        }
+        if (!pass) break;
     }
 
     return pass;
