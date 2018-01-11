@@ -2,6 +2,7 @@ CC=mpicc
 CFLAGS=-O3 -Wall -Wextra -lm -fopenmp -std=c99 -g
 
 results=""
+indexes=""
 
 all: non_blocking blocking
 
@@ -18,17 +19,19 @@ bin_dir:
 
 run:
 	mpirun -np $(p) ./bin/non_blocking_knn dataset/mnist_train.karas \
-			dataset/mnist_train_labels.karas 30 dataset/mnist_train_results.karas
+			dataset/mnist_train_labels.karas 30 dataset/mnist_train_results.karas \
+			dataset/mnist_train_results_indexes.karas
 
 runp:
-	mpirun -np $(p) ./bin/non_blocking_knn $(data) $(labels) $(k) $(results)
+	mpirun -np $(p) ./bin/non_blocking_knn $(data) $(labels) $(k) $(results) $(indexes)
 
 run_blocking:
 	mpirun -np $(p) ./bin/blocking_knn dataset/mnist_train.karas \
-			dataset/mnist_train_labels.karas 30 dataset/mnist_train_results.karas
+			dataset/mnist_train_labels.karas 30 dataset/mnist_train_results.karas \
+			dataset/mnist_train_results_indexes.karas
 
 runp_blocking:
-	mpirun -np $(p) ./bin/blocking_knn $(data) $(labels) $(k) $(results)
+	mpirun -np $(p) ./bin/blocking_knn $(data) $(labels) $(k) $(results) $(indexes)
 
 purge:
 	-rm bin/*

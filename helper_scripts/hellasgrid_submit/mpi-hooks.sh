@@ -13,7 +13,7 @@ pre_run_hook () {
     tar -xzf distributed_knn.tar.gz
 
     # Build it.
-    cd Distributed_Knn
+    cd Distributed_KNN
     #echo "Executing make from " $(pwd)
     make -s all
     cd ../

@@ -238,7 +238,14 @@ int KNN_Pair_asc_comp(const void * a, const void *b)
     double db = ((struct KNN_Pair *) b)->distance;
     if (da > db) return 1;
     else if (da < db) return -1;
-    else return 0;
+    else {
+        double ia = ((struct KNN_Pair *) a)->index;
+        double ib = ((struct KNN_Pair *) b)->index;
+        if (ia > ib) return 1;
+        else if (ia < ib) return -1;
+        else return 0;
+    }
+
 }
 
 int KNN_Pair_asc_comp_by_index(const void * a, const void *b)
