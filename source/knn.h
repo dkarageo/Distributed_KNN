@@ -193,8 +193,8 @@ struct KNN_Pair **KNN_Pair_create_subtable(struct KNN_Pair **knns,
                                            int col_start, int col_end);
 
 /**
- * An ascending comparator for struct KNN_Pair object, based on distance
- * field of each one.
+ * An ascending comparator for struct KNN_Pair objects, based firstly on distance
+ * field of each one and secondly on index field.
  *
  * It is intended for usage in functions like qsort().
  */
